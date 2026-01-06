@@ -1,8 +1,11 @@
 #include <cstddef>
+#include <iostream>
 #include <stdexcept>
 #include <string>
+
 class Array {
   public:
+    // constructors
     Array() : size(0), capacity(8) { data = new int[capacity]; }
     Array(size_t n) : size(n), capacity(8) {
         if (size > capacity) {
@@ -22,6 +25,30 @@ class Array {
             data[i] = arr[i];
         }
     }
+
+    // copy constructors
+    Array(const Array &other) {
+        size = other.size;
+        capacity = other.capacity;
+        data = new int[capacity];
+        for (size_t i = 0; i < size; i++) {
+            data[i] = other.data[i];
+        }
+    };
+    Array &operator=(const Array &other) {
+        if (this != &other) {
+            size = other.size;
+            capacity = other.capacity;
+            int *new_data = new int[capacity];
+            for (size_t i = 0; i < size; i++) {
+                new_data[i] = other.data[i];
+            }
+            delete[] data;
+            data = new_data;
+        }
+        return *this;
+    }
+
     ~Array() { delete[] data; }
 
     void push(int n) {
@@ -118,11 +145,13 @@ class Array {
 
 int main() {
     int input[] = {1, 2, 3, 4, 5, 6, 7};
-    Array arr(input, 7);
+    Array a(input, 7);
 
-    arr.push(8);
-    arr.push(9);
-    arr.push(10);
+    Array b = a;
+    b[2] = 55;
+
+    std::cout << b.show() << std::endl;
+    std::cout << a.show() << std::endl;
 
     return 0;
 }

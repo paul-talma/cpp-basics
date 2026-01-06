@@ -1,6 +1,6 @@
 # vector
 
-- [ ] copy and move semantics
+- [x] copy and move semantics
 
 # stack and queue
 
