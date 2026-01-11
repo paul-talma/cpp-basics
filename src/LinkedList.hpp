@@ -1,20 +1,22 @@
+#include <ostream>
 #include <string>
+
+template <typename T> struct Node {
+    T val;
+    Node *next;
+    Node *prev;
+    Node(T v) : val(v), next(nullptr), prev(nullptr) {}
+};
 
 template <typename T> class LinkedList {
   private:
     size_t size{0};
 
   public:
-    struct Node {
-        T val;
-        Node *next;
-        Node(T v = T(), Node *node = nullptr) : val(v), next(node) {}
-    };
+    Node<T> *_head;
+    Node<T> *_tail;
 
-    Node *head;
-    Node *tail;
-
-    LinkedList() : head(nullptr), tail(nullptr), size(0) {};
+    LinkedList() : _head(nullptr), _tail(nullptr), size(0) {};
     LinkedList(T val) : LinkedList() { push_back(val); }
     LinkedList(T *arr, size_t n) : LinkedList() {
         for (size_t i = 0; i < n; i++) {
@@ -23,54 +25,54 @@ template <typename T> class LinkedList {
     }
 
     ~LinkedList() {
-        Node *curr = head;
+        Node<T> *curr = _head;
         while (curr) {
-            Node *temp = curr;
+            Node<T> *temp = curr;
             curr = curr->next;
             delete temp;
         }
     }
 
     void push_back(T val) {
-        Node *node = new Node(val);
+        Node<T> *node = new Node<T>(val);
         size++;
-        if (!tail) {
-            head = tail = node;
+        if (!_tail) {
+            _head = _tail = node;
             return;
         }
-        tail->next = node;
-        tail = node;
+        _tail->next = node;
+        _tail = node;
     }
 
     void push_front(T val) {
-        Node *node = new Node(val);
+        Node<T> *node = new Node<T>(val);
         size++;
-        if (!head) {
-            head = tail = node;
+        if (!_head) {
+            _head = _tail = node;
             return;
         }
-        node->next = head;
-        head = node;
+        node->next = _head;
+        _head = node;
     }
 
     void insert_at(size_t id, T val) {
         if (id > size) {
             throw std::out_of_range("index out of bounds!");
         }
-        Node *node = new Node(val);
-        if (!head) {
-            head = node;
-            tail = node;
+        Node<T> *node = new Node<T>(val);
+        if (!_head) {
+            _head = node;
+            _tail = node;
         } else if (id == 0) {
-            node->next = head;
-            head = node;
+            node->next = _head;
+            _head = node;
             return;
         } else if (id == size) {
-            tail->next = node;
-            tail = node;
+            _tail->next = node;
+            _tail = node;
             return;
         } else {
-            Node *curr = head;
+            Node<T> *curr = _head;
             for (size_t i = 0; i < id - 1; i++) {
                 curr = curr->next;
             }
@@ -81,32 +83,32 @@ template <typename T> class LinkedList {
     }
 
     void pop_front() {
-        if (!head) {
+        if (!_head) {
             throw std::out_of_range("List empty, nothing to pop!");
         }
-        Node *old = head;
-        head = head->next;
+        Node<T> *old = _head;
+        _head = _head->next;
         delete old;
         size--;
     }
 
     void pop_back() {
-        if (!head) {
+        if (!_head) {
             throw std::out_of_range("List empty, nothing to pop!");
         }
         if (size == 1) {
-            delete head;
-            head = tail = nullptr;
+            delete _head;
+            _head = _tail = nullptr;
         } else {
-            Node *curr = head;
-            Node *prev;
+            Node<T> *curr = _head;
+            Node<T> *prev;
             while (curr->next) {
                 prev = curr;
                 curr = curr->next;
             }
             delete curr;
-            tail = prev;
-            tail->next = nullptr;
+            _tail = prev;
+            _tail->next = nullptr;
         }
         size--;
     }
@@ -124,48 +126,49 @@ template <typename T> class LinkedList {
             return;
         }
 
-        Node *curr = head;
+        Node<T> *curr = _head;
         for (size_t i = 0; i < id - 1; i++) {
             curr = curr->next;
         }
-        Node *tmp = curr->next;
+        Node<T> *tmp = curr->next;
         curr->next = tmp->next;
         delete tmp;
         size--;
     }
 
-    std::string show() {
-        if (!head) {
-            return "show(): no nodes!";
-        }
-
-        std::string nodeString;
-        Node *curr = head;
-        while (curr) {
-            nodeString.append(std::to_string(curr->val));
-            if (curr->next) {
-                nodeString.append(" -> ");
-            }
-            curr = curr->next;
-        }
-        return nodeString;
-    }
+    Node<T> *head() const { return _head; }
+    Node<T> *tail() const { return _tail; }
 
     T front() const {
-        if (!head) {
+        if (!_head) {
             throw std::out_of_range("front(): list is empty!");
         }
-        return head->val;
+        return _head->val;
     }
 
     T back() const {
-        if (!tail) {
+        if (!_tail) {
             throw std::out_of_range("back(): list is empty!");
         }
-        return tail->val;
+        return _tail->val;
     }
 
-    bool empty() const { return head == nullptr; }
+    bool empty() const { return _head == nullptr; }
 
     size_t len() const { return size; }
 };
+
+template <typename T>
+std::ostream &operator<<(std::ostream &os, const LinkedList<T> &ll) {
+    os << "[";
+    Node<T> *curr = ll.head();
+    while (curr) {
+        os << curr->val;
+        if (curr->next) {
+            os << " <-> ";
+        }
+        curr = curr->next;
+    }
+    os << "]";
+    return os;
+}

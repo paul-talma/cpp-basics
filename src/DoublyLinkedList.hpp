@@ -1,7 +1,7 @@
 #include "../include/DoublyLinkedList.hpp"
 #include <cstddef>
+#include <initializer_list>
 #include <ostream>
-#include <string>
 
 template <typename T> struct Node {
     T val;
@@ -10,19 +10,73 @@ template <typename T> struct Node {
     Node(T v) : val(v), next(nullptr), prev(nullptr) {}
 };
 template <typename T> class DoublyLinkedList {
-  public:
   private:
     Node<T> *_head;
     Node<T> *_tail;
     size_t _size;
 
   public:
-    DoublyLinkedList() : _head(nullptr), _tail(nullptr), _size(0) {};
+    DoublyLinkedList() : _size(0), _head(nullptr), _tail(nullptr) {};
     DoublyLinkedList(T val) : DoublyLinkedList() { push_back(val); }
     DoublyLinkedList(T *arr, size_t n) : DoublyLinkedList() {
         for (size_t i = 0; i < n; i++) {
             push_back(arr[i]);
         }
+    }
+    DoublyLinkedList(std::initializer_list<T> &list)
+        : DoublyLinkedList(), _size(list.size()) {
+        for (const T &elem : list) {
+            push_back(elem);
+        }
+    }
+
+    // copy semantics
+    DoublyLinkedList(const DoublyLinkedList &other) {
+        *this = other;
+        // _size = other._size;
+        // Node<T> *curr = other.head();
+        // while (curr) {
+        //     push_back(curr->val);
+        //     curr = curr->next;
+        // }
+    }
+
+    DoublyLinkedList &operator=(const DoublyLinkedList &other) {
+        if (this != &other) {
+            this.~DoublyLinkedList();
+            _size = other.size();
+            Node<T> *curr = other.head();
+            while (curr) {
+                push_back(curr->val);
+                curr = curr->next;
+            }
+        }
+        return *this;
+    }
+
+    // move semantics
+    DoublyLinkedList(const DoublyLinkedList &&other) {
+        this.~DoublyLinkedList();
+        _size = other.size();
+        _head = other.head();
+        _tail = other.tail();
+
+        other._size = 0;
+        other._head = nullptr;
+        other._tail = nullptr;
+    }
+    DoublyLinkedList &operator=(const DoublyLinkedList &&other) {
+        if (this != other) {
+            this.~DoublyLinkedList();
+            _size = other.size();
+            _head = other.head();
+            _tail = other.tail();
+
+            other._size = 0;
+            other._head = nullptr;
+            other._tail = nullptr;
+        }
+        return *this;
     }
 
     ~DoublyLinkedList() {
@@ -32,6 +86,9 @@ template <typename T> class DoublyLinkedList {
             curr = curr->next;
             delete temp;
         }
+        _head = nullptr;
+        _tail = nullptr;
+        _size = 0;
     }
 
     void push_back(T val) {
