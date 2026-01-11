@@ -6,6 +6,9 @@
 #include <stdexcept>
 
 template <typename T> class Array {
+    static_assert(std::is_default_constructible<T>(),
+                  "Array<T> requires default-constructible T");
+
   private:
     T *_data;
     size_t _size;
@@ -43,45 +46,40 @@ template <typename T> class Array {
     }
 
     // initializer list
-    Array(std::initializer_list<T> list)
+    Array(const std::initializer_list<T> &list)
         : _size(list.size()), _capacity(std::max(_size, _min_capacity)) {
         _data = new T[_capacity];
         size_t i{0};
         for (const T &elem : list) {
-            _data[i++] = std::move(elem);
+            _data[i++] = elem;
         }
     }
 
     // copy semantics
     Array(const Array &other) {
-        std::cout << "calling copy constructor. copying from " << other
-                  << std::endl;
+        T *new_data = new T[other._capacity];
+        for (size_t i = 0; i < other._size; i++) {
+            new_data[i] = other._data[i];
+        }
+        _data = new_data;
         _size = other._size;
         _capacity = other._capacity;
-        _data = new T[_capacity];
-        for (size_t i = 0; i < _size; i++) {
-            _data[i] = other._data[i];
-        }
     };
     Array<T> &operator=(const Array &other) {
-        std::cout << "calling copy assignment operator. copying from " << other
-                  << std::endl;
         if (this != &other) {
-            _size = other._size;
-            _capacity = other._capacity;
-            T *new_data = new T[_capacity];
-            for (size_t i = 0; i < _size; i++) {
+            T *new_data = new T[other._capacity];
+            for (size_t i = 0; i < other._size; i++) {
                 new_data[i] = other._data[i];
             }
-            delete[] _data;
             _data = new_data;
+            _size = other._size;
+            _capacity = other._capacity;
         }
         return *this;
     }
 
     // move semantics
-    Array(Array &&other) {
-        std::cout << "calling move constructor. moving " << other << std::endl;
+    Array(Array &&other) noexcept {
         _data = other._data;
         _size = other._size;
         _capacity = other._capacity;
@@ -91,7 +89,7 @@ template <typename T> class Array {
         other._capacity = 0;
     }
 
-    Array<T> &operator=(Array &&other) {
+    Array<T> &operator=(Array &&other) noexcept {
         std::cout << "calling move assignment operator. moving " << other
                   << std::endl;
         if (this != &other) {
@@ -124,16 +122,24 @@ template <typename T> class Array {
         _data[_size++] = std::move(value);
     }
 
-    T pop_back() {
+    T pop() {
         if (_size == 0) {
             throw std::out_of_range("empty array");
         }
         _size--;
         T val = _data[_size];
-        _data[_size].~T();
         if (_size < _capacity / 2 && _capacity / 2 > _min_capacity) {
             _resize(_capacity / 2);
         }
+        return val;
+    }
+
+    T pop(size_t id) {
+        if (_size == 0) {
+            throw std::out_of_range("empty array");
+        }
+        T val = _data[id];
+        erase(id);
         return val;
     }
 
@@ -153,9 +159,8 @@ template <typename T> class Array {
         if (id >= _size) {
             throw std::out_of_range("invalid index");
         }
-        std::move(_data + id + 1, _data + _size + 1, _data + id);
+        std::move(_data + id + 1, _data + _size, _data + id);
         _size--;
-        _data[_size].~T();
         if (_size < _capacity / 2 && _capacity / 2 > _min_capacity) {
             _resize(_capacity / 2);
         }
